@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}
+Index
+{% endblock title %}
+
+{% block title_h1 %}
+Главная
+{% endblock title_h1 %}
+
+
+
+{% comment "часть 1" %}
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Учу Django</title>
+    </head>
+    <body>
+        <h1>{{header }}</h1>
+    <p>Имя: {{user.name}} Возраст: {{user.age}}</p>
+    <p>Адрес: {{address.0}} дом {{address.1}} кв. {{address.2}}</p>
+    <p>Языки: {{lang.0}}, {{lang.1}}</p>
+    
+    <p>текущее время: {% now 'j.m.Y' %} </p>
+    
+    {% if  user.age > 65 %}
+    <p>пользователь является пенсионером</p>
+    {% else %}
+        <p>пользователь не является пенсионером</p>
+    {% endif %}
+    
+
+    <h2>Типизированные языки</h2>
+    <ul>
+        {% for lang in typed_lang %}
+        <li>{{lang}}</li>
+        {%empty %}
+        <p>список пустой</p>
+        {% endfor %}
+    </ul>
+    
+    {% with name='Петр' age='41' %}
+    <p>Имя: {{name}} Возраст: {{age}}</p>
+    {% endwith %}
+    
+    {# включего экранирование#}
+    {{text}}
+    
+
+    {% autoescape off %}
+    {{text}}
+    {% endautoescape %}
+    
+    <img src="{% static 'images/django.png' %}" width='250px'/>
+    
+</body>
+</html>
+{% endcomment %}
+
