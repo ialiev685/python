@@ -5,7 +5,7 @@ from sqlalchemy import Insert
 # import time
 from src.api.dependencies import PaginationParamsDep
 from src.schemas.hotels import Hotel, HotelPUT
-from src.database import async_session_marker
+from src.database import async_session_marker, engine
 from src.models.hotels import HotelsModel
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
@@ -81,6 +81,9 @@ async def create_hotel(
 ):
     async with async_session_marker() as session:
         add_hotel_stmt = Insert(HotelsModel).values(**hotel.model_dump())
+        print(
+            add_hotel_stmt.compile(bind=engine, compile_kwargs={"literal_binds": True})
+        )
         await session.execute(add_hotel_stmt)
         await session.commit()
 
