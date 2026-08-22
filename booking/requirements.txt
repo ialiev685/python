@@ -10,6 +10,7 @@ asttokens==3.0.2
 async-timeout==5.0.1
 asyncpg==0.31.0
 attrs==26.1.0
+black==26.5.1
 click==8.4.2
 comm==0.2.3
 debugpy==1.8.21
@@ -50,6 +51,7 @@ pydantic_core==2.46.4
 Pygments==2.20.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
+pytokens==0.4.1
 pyzmq==27.1.0
 six==1.17.0
 SQLAlchemy==2.0.52
