@@ -1,9 +1,12 @@
-from fastapi import Query, HTTPException, APIRouter
+from fastapi import Query, HTTPException, APIRouter, Body
+from sqlalchemy import Insert
 
 # import asyncio
 # import time
 from src.api.dependencies import PaginationParamsDep
 from src.schemas.hotels import Hotel, HotelPUT
+from src.database import async_session_marker
+from src.models.hotels import HotelsModel
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -62,14 +65,26 @@ def get_hotels(
 
 
 @router.post("/add_hotel", summary="Добавить отель")
-def create_hotel(
-    hotel: Hotel,
+async def create_hotel(
+    hotel: Hotel = Body(
+        openapi_examples={
+            "1": {
+                "summary": "Сочи",
+                "value": {"title": "Сочи парк 5*", "location": "ул. Моря 1"},
+            },
+            "2": {
+                "summary": "Дубаи",
+                "value": {"title": "Дубай Марина", "location": "ул. Шейха 1"},
+            },
+        }
+    )
 ):
-    id = hotels[-1]["id"] + 1
-    new_hotel = {"id": id, "title": hotel.title, "name": hotel.name}
-    hotels.append(new_hotel)
+    async with async_session_marker() as session:
+        add_hotel_stmt = Insert(HotelsModel).values(**hotel.model_dump())
+        await session.execute(add_hotel_stmt)
+        await session.commit()
 
-    return new_hotel
+    return {"status": 200}
 
 
 @router.patch("/hotels/{hotel_id}", summary="Частичное обновление")
