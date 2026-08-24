@@ -1,5 +1,5 @@
 from fastapi import Query, HTTPException, APIRouter, Body
-from sqlalchemy import Insert
+from sqlalchemy import insert, select, func
 
 # import asyncio
 # import time
@@ -9,17 +9,6 @@ from src.database import async_session_marker, engine
 from src.models.hotels import HotelsModel
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
-
-hotels: list[dict] = [
-    {"id": 1, "title": "Sochi", "name": "sochi"},
-    {"id": 2, "title": "Дубай", "name": "dubai"},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
-]
-
 
 # @router.get("/async/{id}")
 # async def async_func(id: int):
@@ -36,32 +25,24 @@ hotels: list[dict] = [
 
 
 @router.get("/hotels", summary="Получить все отели")
-def get_hotels(
+async def get_hotels(
     pagination: PaginationParamsDep,
-    id: int = Query(None, description="id отеля"),
-    title: str = Query(None, description="Название отеля"),
+    title: str | None = Query(None, description="Название отеля"),
+    location: str | None = Query(None, description="Локация отеля"),
 ):
+    per_page = pagination.per_page or 5
+    async with async_session_marker() as session:
+        query = select(HotelsModel)
+        if title:
+            query = query.where(HotelsModel.title.ilike(f"%{title}%"))
+        if location:
+            query = query.where(HotelsModel.location.ilike(f"%{location}%"))
 
-    def normalize(text: str) -> str:
-        return text.lower().strip() if isinstance(text, str) else ""
+        query = query.limit(per_page).offset((pagination.page - 1) * per_page)
+        result = await session.execute(query)
+        hotels = result.scalars().all()
 
-    filtered = []
-    for hotel in hotels:
-        if id is not None and hotel["id"] != id:
-            continue
-
-        if title is not None:
-            hotel_title = normalize(hotel["title"])
-            search_title = normalize(title)
-            if hotel_title != search_title:
-                continue
-
-        filtered.append(hotel)
-    if pagination.page and pagination.per_page:
-        start_index = (pagination.page - 1) * pagination.per_page
-        return filtered[start_index:][: pagination.per_page]
-
-    return filtered
+        return hotels
 
 
 @router.post("/add_hotel", summary="Добавить отель")
@@ -80,7 +61,7 @@ async def create_hotel(
     )
 ):
     async with async_session_marker() as session:
-        add_hotel_stmt = Insert(HotelsModel).values(**hotel.model_dump())
+        add_hotel_stmt = insert(HotelsModel).values(**hotel.model_dump())
         print(
             add_hotel_stmt.compile(bind=engine, compile_kwargs={"literal_binds": True})
         )
