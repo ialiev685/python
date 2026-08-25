@@ -34,9 +34,9 @@ async def get_hotels(
     async with async_session_marker() as session:
         query = select(HotelsModel)
         if title:
-            query = query.where(HotelsModel.title.ilike(f"%{title}%"))
+            query = query.where(HotelsModel.title.icontains(title))
         if location:
-            query = query.where(HotelsModel.location.ilike(f"%{location}%"))
+            query = query.where(HotelsModel.location.icontains(location))
 
         query = query.limit(per_page).offset((pagination.page - 1) * per_page)
         result = await session.execute(query)
