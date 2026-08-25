@@ -7,6 +7,7 @@ from src.api.dependencies import PaginationParamsDep
 from src.schemas.hotels import Hotel, HotelPUT
 from src.database import async_session_marker, engine
 from src.models.hotels import HotelsModel
+from repositories.hotels import HotelsRepository
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -32,17 +33,13 @@ async def get_hotels(
 ):
     per_page = pagination.per_page or 5
     async with async_session_marker() as session:
-        query = select(HotelsModel)
-        if title:
-            query = query.where(HotelsModel.title.icontains(title))
-        if location:
-            query = query.where(HotelsModel.location.icontains(location))
 
-        query = query.limit(per_page).offset((pagination.page - 1) * per_page)
-        result = await session.execute(query)
-        hotels = result.scalars().all()
-
-        return hotels
+        return await HotelsRepository(session=session).get_all(
+            title=title,
+            location=location,
+            offset=(pagination.page - 1) * per_page,
+            limit=per_page,
+        )
 
 
 @router.post("/add_hotel", summary="Добавить отель")
