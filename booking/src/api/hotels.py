@@ -90,3 +90,11 @@ def update_hotel_put(hotel_id: int, data: Hotel):
     hotel["name"] = data.name
 
     return hotel
+
+
+@router.delete("/{hotel_id}", summary='Удалить отели')
+async def delete_hotel(hotel_id: int):
+    async with async_session_marker() as session:
+        await HotelsRepository(session=session).delete(id=hotel_id)
+        await session.commit()
+        return {"status": 200}
