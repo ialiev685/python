@@ -26,7 +26,7 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 #     print(f"Завершена синхронная функция: {id}")
 
 
-@router.get("/hotels", summary="Получить все отели")
+@router.get("", summary="Получить все отели")
 async def get_hotels(
         pagination: PaginationParamsDep,
         title: str | None = Query(None, description="Название отеля"),
@@ -42,7 +42,14 @@ async def get_hotels(
         )
 
 
-@router.post("/add_hotel", summary="Добавить отель")
+@router.get('/{hotel_id}', summary='Получить отель')
+async def get_hotel(hotel_id: int):
+    async with async_session_marker() as session:
+        hotel = await  HotelsRepository(session).get_by_id(id=hotel_id)
+        return {"status": 200, 'data': hotel}
+
+
+@router.post("", summary="Добавить отель")
 async def create_hotel(
         hotel: Hotel = Body(
             openapi_examples={
@@ -64,7 +71,7 @@ async def create_hotel(
     return {"status": 200, 'data': hotel}
 
 
-@router.patch("/hotels/{hotel_id}", summary="Частичное обновление")
+@router.patch("/{hotel_id}", summary="Частичное обновление")
 async def update_hotel_patch(hotel_id: int, data: HotelPUT):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, exclude_unset=True, id=hotel_id)
@@ -72,7 +79,7 @@ async def update_hotel_patch(hotel_id: int, data: HotelPUT):
         return {"status": 200}
 
 
-@router.put("/hotels/{hotel_id}", summary="Полное обновление")
+@router.put("/{hotel_id}", summary="Полное обновление")
 async def update_hotel_put(hotel_id: int, data: Hotel):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, id=hotel_id)
