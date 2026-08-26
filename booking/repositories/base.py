@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
+from pydantic import BaseModel
+from src.config import settings
 
 
 class BaseRepository:
@@ -16,3 +18,13 @@ class BaseRepository:
         query = select(self.model).where(**filter_by)
         result = await self.session.execute(query)
         return result.scalars().one_or_none()
+
+    async def add(self, data: BaseModel):
+        add_hotel_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+        self.debug(query=add_hotel_stmt)
+        hotel = await self.session.execute(add_hotel_stmt)
+        return hotel.scalars().one()
+
+    def debug(self, query):
+        if settings.DEBUG:
+            print(query.compile(compile_kwargs={"literal_binds": True}))

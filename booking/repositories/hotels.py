@@ -8,11 +8,11 @@ class HotelsRepository(BaseRepository):
     model = HotelsModel
 
     async def get_all(
-        self,
-        title,
-        location,
-        offset,
-        limit,
+            self,
+            title,
+            location,
+            offset,
+            limit,
     ):
         query = select(HotelsModel)
         if title:
@@ -21,8 +21,6 @@ class HotelsRepository(BaseRepository):
             query = query.where(HotelsModel.location.icontains(location))
 
         query = query.limit(limit).offset(offset)
-        print(settings.DEBUG)
-        if settings.DEBUG:
-            print(query.compile(compile_kwargs={"literal_binds": True}))
+        self.debug(query=query)
         result = await self.session.execute(query)
         return result.scalars().all()

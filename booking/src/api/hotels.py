@@ -11,6 +11,7 @@ from repositories.hotels import HotelsRepository
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
+
 # @router.get("/async/{id}")
 # async def async_func(id: int):
 #     print(f"Запущена асинхронная функция: {id}")
@@ -27,13 +28,12 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 @router.get("/hotels", summary="Получить все отели")
 async def get_hotels(
-    pagination: PaginationParamsDep,
-    title: str | None = Query(None, description="Название отеля"),
-    location: str | None = Query(None, description="Локация отеля"),
+        pagination: PaginationParamsDep,
+        title: str | None = Query(None, description="Название отеля"),
+        location: str | None = Query(None, description="Локация отеля"),
 ):
-    per_page = pagination.per_page or 5
+    per_page = pagination.per_page or 10
     async with async_session_marker() as session:
-
         return await HotelsRepository(session=session).get_all(
             title=title,
             location=location,
@@ -44,28 +44,24 @@ async def get_hotels(
 
 @router.post("/add_hotel", summary="Добавить отель")
 async def create_hotel(
-    hotel: Hotel = Body(
-        openapi_examples={
-            "1": {
-                "summary": "Сочи",
-                "value": {"title": "Сочи парк 5*", "location": "ул. Моря 1"},
-            },
-            "2": {
-                "summary": "Дубаи",
-                "value": {"title": "Дубай Марина", "location": "ул. Шейха 1"},
-            },
-        }
-    )
+        hotel: Hotel = Body(
+            openapi_examples={
+                "1": {
+                    "summary": "Сочи",
+                    "value": {"title": "Сочи парк 5*", "location": "ул. Моря 1"},
+                },
+                "2": {
+                    "summary": "Дубаи",
+                    "value": {"title": "Дубай Марина", "location": "ул. Шейха 1"},
+                },
+            }
+        )
 ):
     async with async_session_marker() as session:
-        add_hotel_stmt = insert(HotelsModel).values(**hotel.model_dump())
-        print(
-            add_hotel_stmt.compile(bind=engine, compile_kwargs={"literal_binds": True})
-        )
-        await session.execute(add_hotel_stmt)
+        hotel = await HotelsRepository(session=session).add(data=hotel)
         await session.commit()
 
-    return {"status": 200}
+    return {"status": 200, 'data': hotel}
 
 
 @router.patch("/hotels/{hotel_id}", summary="Частичное обновление")
