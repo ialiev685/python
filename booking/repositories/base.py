@@ -25,8 +25,10 @@ class BaseRepository:
         hotel = await self.session.execute(add_hotel_stmt)
         return hotel.scalars().one()
 
-    async def edit(self, data: BaseModel, **filter_by):
-        update_hotel_stmt = update(self.model).filter_by(**filter_by).values(**data.model_dump())
+    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
+        update_hotel_stmt = (update(self.model)
+                             .filter_by(**filter_by)
+                             .values(**data.model_dump(exclude_unset=exclude_unset)))
         self.debug(request=update_hotel_stmt)
         await self.session.execute(update_hotel_stmt)
 
