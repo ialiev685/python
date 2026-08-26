@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, delete
+from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
 from src.config import settings
 
@@ -21,18 +21,20 @@ class BaseRepository:
 
     async def add(self, data: BaseModel):
         add_hotel_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        self.debug(query=add_hotel_stmt)
+        self.debug(request=add_hotel_stmt)
         hotel = await self.session.execute(add_hotel_stmt)
         return hotel.scalars().one()
 
     async def edit(self, data: BaseModel, **filter_by):
-        pass
+        update_hotel_stmt = update(self.model).filter_by(**filter_by).values(**data.model_dump())
+        self.debug(request=update_hotel_stmt)
+        await self.session.execute(update_hotel_stmt)
 
     async def delete(self, **filter_by) -> None:
         delete_hotel_stmt = delete(self.model).filter_by(**filter_by)
-        self.debug(query=delete_hotel_stmt)
+        self.debug(request=delete_hotel_stmt)
         await self.session.execute(delete_hotel_stmt)
 
-    def debug(self, query):
+    def debug(self, request):
         if settings.DEBUG:
-            print(query.compile(compile_kwargs={"literal_binds": True}))
+            print(request.compile(compile_kwargs={"literal_binds": True}))

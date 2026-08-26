@@ -21,6 +21,6 @@ class HotelsRepository(BaseRepository):
             query = query.where(HotelsModel.location.icontains(location))
 
         query = query.limit(limit).offset(offset)
-        self.debug(query=query)
+        self.debug(request=query)
         result = await self.session.execute(query)
         return result.scalars().all()

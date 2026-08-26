@@ -80,16 +80,11 @@ def update_hotel_patch(hotel_id: int, data: HotelPUT):
 
 
 @router.put("/hotels/{hotel_id}", summary="Полное обновление")
-def update_hotel_put(hotel_id: int, data: Hotel):
-    hotel = [hotel for hotel in hotels if hotel["id"] == hotel_id][0]
-    if not hotel:
-        raise HTTPException(
-            status_code=404, detail="Данные с задачанными параметрами не найдены"
-        )
-    hotel["title"] = data.title
-    hotel["name"] = data.name
-
-    return hotel
+async def update_hotel_put(hotel_id: int, data: Hotel):
+    async with async_session_marker() as session:
+        await HotelsRepository(session=session).edit(data=data, id=hotel_id)
+        await  session.commit()
+        return {"status": 200}
 
 
 @router.delete("/{hotel_id}", summary='Удалить отели')
