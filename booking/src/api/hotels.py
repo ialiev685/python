@@ -4,7 +4,7 @@ from sqlalchemy import insert, select, func
 # import asyncio
 # import time
 from src.api.dependencies import PaginationParamsDep
-from src.schemas.hotels import Hotel, HotelPUT
+from src.schemas.hotels import HotelAddSchema, HotelPutSchema
 from src.database import async_session_marker, engine
 from src.models.hotels import HotelsModel
 from repositories.hotels import HotelsRepository
@@ -51,7 +51,7 @@ async def get_hotel(hotel_id: int):
 
 @router.post("", summary="Добавить отель")
 async def create_hotel(
-        hotel: Hotel = Body(
+        hotel: HotelAddSchema = Body(
             openapi_examples={
                 "1": {
                     "summary": "Сочи",
@@ -72,7 +72,7 @@ async def create_hotel(
 
 
 @router.patch("/{hotel_id}", summary="Частичное обновление")
-async def update_hotel_patch(hotel_id: int, data: HotelPUT):
+async def update_hotel_patch(hotel_id: int, data: HotelPutSchema):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, exclude_unset=True, id=hotel_id)
         await  session.commit()
@@ -80,7 +80,7 @@ async def update_hotel_patch(hotel_id: int, data: HotelPUT):
 
 
 @router.put("/{hotel_id}", summary="Полное обновление")
-async def update_hotel_put(hotel_id: int, data: Hotel):
+async def update_hotel_put(hotel_id: int, data: HotelAddSchema):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, id=hotel_id)
         await  session.commit()
