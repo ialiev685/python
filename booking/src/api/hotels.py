@@ -1,13 +1,11 @@
-from fastapi import Query, HTTPException, APIRouter, Body
-from sqlalchemy import insert, select, func
+from fastapi import Query, APIRouter, Body
 
 # import asyncio
 # import time
 from src.api.dependencies import PaginationParamsDep
 from src.schemas.hotels import HotelAddSchema, HotelPutSchema
-from src.database import async_session_marker, engine
-from src.models.hotels import HotelsModel
-from repositories.hotels import HotelsRepository
+from src.database import async_session_marker
+from src.repositories.hotels import HotelsRepository
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
