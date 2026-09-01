@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Body, HTTPException
+from fastapi import APIRouter, status, Body, HTTPException, Query
 
 from src.database import async_session_marker
 from src.repositories.rooms import RoomRepository
@@ -10,9 +10,9 @@ router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
 
 @router.get('/{hotel_id}/rooms')
-async def get_rooms(hotel_id: int):
+async def get_rooms(hotel_id: int, title: str | None = Query(None), description: str | None = Query(None)):
     async with async_session_marker() as session:
-        rooms = await RoomRepository(session=session).get_all(hotel_id=hotel_id)
+        rooms = await RoomRepository(session=session).get_all(hotel_id=hotel_id, title=title, description=description)
         return {'status': status.HTTP_200_OK, 'data': rooms}
 
 
