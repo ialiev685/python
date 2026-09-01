@@ -1,4 +1,4 @@
-from fastapi import Query, APIRouter, Body
+from fastapi import Query, APIRouter, Body, status
 
 # import asyncio
 # import time
@@ -44,7 +44,7 @@ async def get_hotels(
 async def get_hotel(hotel_id: int):
     async with async_session_marker() as session:
         hotel = await  HotelsRepository(session).get_by_id(id=hotel_id)
-        return {"status": 200, 'data': hotel}
+        return {"status": status.HTTP_200_OK, 'data': hotel}
 
 
 @router.post("", summary="Добавить отель")
@@ -66,7 +66,7 @@ async def create_hotel(
         hotel = await HotelsRepository(session=session).add(data=hotel)
         await session.commit()
 
-    return {"status": 200, 'data': hotel}
+    return {"status": status.HTTP_200_OK, 'data': hotel}
 
 
 @router.patch("/{hotel_id}", summary="Частичное обновление")
@@ -74,7 +74,7 @@ async def update_hotel_patch(hotel_id: int, data: HotelPutSchema):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, exclude_unset=True, id=hotel_id)
         await  session.commit()
-        return {"status": 200}
+        return {"status": status.HTTP_200_OK}
 
 
 @router.put("/{hotel_id}", summary="Полное обновление")
@@ -82,7 +82,7 @@ async def update_hotel_put(hotel_id: int, data: HotelAddSchema):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, id=hotel_id)
         await  session.commit()
-        return {"status": 200}
+        return {"status": status.HTTP_200_OK}
 
 
 @router.delete("/{hotel_id}", summary='Удалить отели')
@@ -90,4 +90,4 @@ async def delete_hotel(hotel_id: int):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).delete(id=hotel_id)
         await session.commit()
-        return {"status": 200}
+        return {"status": status.HTTP_200_OK}
