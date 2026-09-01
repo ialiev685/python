@@ -3,6 +3,7 @@ from schemas.users import UserRequestAddSchema, UserAddSchema
 from src.services.auth import AuthService
 from src.database import async_session_marker
 from src.repositories.users import UsersRepository
+from src.api.dependencies import UserIdDep
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация"])
 
@@ -32,7 +33,14 @@ async def login_user(data: UserRequestAddSchema, response: Response):
         return {"status": status.HTTP_200_OK, 'access_token': token}
 
 
-@router.get('/only_auth')
-async def only_auth(request: Request):
-    access_token = request.cookies.get('access_token', None)
-    print('access_token', access_token)
+@router.get('/me')
+async def get_me(user_id: UserIdDep):
+    async with async_session_marker() as session:
+        user = await UsersRepository(session=session).get_one_or_none(id=user_id)
+        return user
+
+
+@router.post('/logout')
+def logout_user(response: Response):
+    response.delete_cookie('access_token')
+    return {"status": status.HTTP_200_OK}
