@@ -1,4 +1,4 @@
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from src.database import Base
 
@@ -11,4 +11,4 @@ class RoomsModel(Base):
     description: Mapped[str | None]
     hotel_id: Mapped[int] = mapped_column(ForeignKey("hotels.id"))
     price: Mapped[int]
-    quantity: Mapped[int]
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
