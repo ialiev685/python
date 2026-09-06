@@ -10,6 +10,6 @@ class HotelSchema(HotelAddSchema):
     id: int
 
 
-class HotelPutSchema(BaseModel):
+class HotelPatchSchema(BaseModel):
     title: str | None = Field(None)
     location: str | None = Field(None)

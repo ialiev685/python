@@ -3,7 +3,7 @@ from fastapi import Query, APIRouter, Body, status
 # import asyncio
 # import time
 from src.api.dependencies import PaginationParamsDep
-from src.schemas.hotels import HotelAddSchema, HotelPutSchema
+from src.schemas.hotels import HotelAddSchema, HotelPatchSchema
 from src.database import async_session_marker
 from src.repositories.hotels import HotelsRepository
 
@@ -70,7 +70,7 @@ async def create_hotel(
 
 
 @router.patch("/{hotel_id}", summary="Частичное обновление")
-async def update_hotel_patch(hotel_id: int, data: HotelPutSchema):
+async def update_hotel_patch(hotel_id: int, data: HotelPatchSchema):
     async with async_session_marker() as session:
         await HotelsRepository(session=session).edit(data=data, exclude_unset=True, id=hotel_id)
         await  session.commit()
