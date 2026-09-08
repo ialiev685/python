@@ -6,6 +6,7 @@ from src.api.dependencies import PaginationParamsDep
 from src.schemas.hotels import HotelAddSchema, HotelPatchSchema
 from src.database import async_session_marker
 from src.repositories.hotels import HotelsRepository
+from src.api.dependencies import DBDep
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -27,17 +28,17 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 @router.get("", summary="Получить все отели")
 async def get_hotels(
         pagination: PaginationParamsDep,
+        db: DBDep,
         title: str | None = Query(None, description="Название отеля"),
         location: str | None = Query(None, description="Локация отеля"),
 ):
     per_page = pagination.per_page or 10
-    async with async_session_marker() as session:
-        return await HotelsRepository(session=session).get_all(
-            title=title,
-            location=location,
-            offset=(pagination.page - 1) * per_page,
-            limit=per_page,
-        )
+    return await db.hotels.get_all(
+        title=title,
+        location=location,
+        offset=(pagination.page - 1) * per_page,
+        limit=per_page,
+    )
 
 
 @router.get('/{hotel_id}', summary='Получить отель')
@@ -49,6 +50,7 @@ async def get_hotel(hotel_id: int):
 
 @router.post("", summary="Добавить отель")
 async def create_hotel(
+        db: DBDep,
         hotel: HotelAddSchema = Body(
             openapi_examples={
                 "1": {
@@ -60,34 +62,31 @@ async def create_hotel(
                     "value": {"title": "Дубай Марина", "location": "ул. Шейха 1"},
                 },
             }
-        )
+        ),
+
 ):
-    async with async_session_marker() as session:
-        hotel = await HotelsRepository(session=session).add(data=hotel)
-        await session.commit()
+    hotel = await db.hotels.add(data=hotel)
+    await db.commit()
 
     return {"status": status.HTTP_200_OK, 'data': hotel}
 
 
 @router.patch("/{hotel_id}", summary="Частичное обновление")
-async def update_hotel_patch(hotel_id: int, data: HotelPatchSchema):
-    async with async_session_marker() as session:
-        await HotelsRepository(session=session).edit(data=data, exclude_unset=True, id=hotel_id)
-        await  session.commit()
-        return {"status": status.HTTP_200_OK}
+async def update_hotel_patch(hotel_id: int, data: HotelPatchSchema, db: DBDep, ):
+    await db.hotels.edit(data=data, exclude_unset=True, id=hotel_id)
+    await  db.commit()
+    return {"status": status.HTTP_200_OK}
 
 
 @router.put("/{hotel_id}", summary="Полное обновление")
-async def update_hotel_put(hotel_id: int, data: HotelAddSchema):
-    async with async_session_marker() as session:
-        await HotelsRepository(session=session).edit(data=data, id=hotel_id)
-        await  session.commit()
-        return {"status": status.HTTP_200_OK}
+async def update_hotel_put(hotel_id: int, data: HotelAddSchema, db: DBDep, ):
+    await db.hotels.edit(data=data, id=hotel_id)
+    await  db.commit()
+    return {"status": status.HTTP_200_OK}
 
 
 @router.delete("/{hotel_id}", summary='Удалить отели')
-async def delete_hotel(hotel_id: int):
-    async with async_session_marker() as session:
-        await HotelsRepository(session=session).delete(id=hotel_id)
-        await session.commit()
-        return {"status": status.HTTP_200_OK}
+async def delete_hotel(hotel_id: int, db: DBDep, ):
+    await db.hotels.delete(id=hotel_id)
+    await db.commit()
+    return {"status": status.HTTP_200_OK}
