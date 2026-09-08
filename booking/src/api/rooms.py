@@ -5,19 +5,19 @@ from src.repositories.rooms import RoomRepository
 from src.repositories.hotels import HotelsRepository
 
 from src.schemas.rooms import RoomAddSchema, RoomPatchSchema, RoomAddRequestSchema, RoomPatchRequestSchema
+from src.api.dependencies import DBDep
 
 router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
 
 @router.get('/{hotel_id}/rooms')
-async def get_rooms(hotel_id: int):
-    async with async_session_marker() as session:
-        rooms = await RoomRepository(session=session).get_filtered(hotel_id=hotel_id)
-        return {'status': status.HTTP_200_OK, 'data': rooms}
+async def get_rooms(hotel_id: int, db: DBDep, ):
+    rooms = await db.rooms.get_filtered(hotel_id=hotel_id)
+    return {'status': status.HTTP_200_OK, 'data': rooms}
 
 
 @router.post('/{hotel_id}/rooms', summary='Добавить номер отеля')
-async def add_room(hotel_id: int, data: RoomAddRequestSchema = Body(
+async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
     openapi_examples={
         "1": {
             "summary": "Номер люкс",
@@ -31,38 +31,34 @@ async def add_room(hotel_id: int, data: RoomAddRequestSchema = Body(
         },
     }
 )):
-    async with async_session_marker() as session:
-        hotel = await HotelsRepository(session=session).get_one_or_none(id=hotel_id)
-        if hotel is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Отель не найден')
-        _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
-        room = await RoomRepository(session=session).add(data=_room)
-        await session.commit()
+    hotel = await db.hotels.get_one_or_none(id=hotel_id)
+    if hotel is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Отель не найден')
+    _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
+    room = await db.rooms.add(data=_room)
+    await db.commit()
 
     return {"status": status.HTTP_200_OK, 'data': room}
 
 
 @router.patch("/{hotel_id}/rooms/{room_id}", summary="Частичное обновление")
-async def update_room_patch(hotel_id: int, room_id: int, data: RoomPatchRequestSchema):
+async def update_room_patch(hotel_id: int, room_id: int, data: RoomPatchRequestSchema, db: DBDep, ):
     _room = RoomPatchSchema(**data.model_dump(exclude_unset=True), hotel_id=hotel_id)
-    async with async_session_marker() as session:
-        await RoomRepository(session=session).edit(data=_room, exclude_unset=True, id=room_id, hotel_id=hotel_id)
-        await  session.commit()
-        return {"status": status.HTTP_200_OK}
+    await db.rooms.edit(data=_room, exclude_unset=True, id=room_id, hotel_id=hotel_id)
+    await  db.commit()
+    return {"status": status.HTTP_200_OK}
 
 
 @router.put("/{hotel_id}/rooms/{room_id}/", summary="Полное обновление")
-async def update_room_put(hotel_id: int, room_id: int, data: RoomAddRequestSchema):
+async def update_room_put(hotel_id: int, room_id: int, data: RoomAddRequestSchema, db: DBDep, ):
     _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
-    async with async_session_marker() as session:
-        await RoomRepository(session=session).edit(data=data, id=room_id, hotel_id=hotel_id)
-        await  session.commit()
-        return {"status": status.HTTP_200_OK}
+    await db.rooms.edit(data=data, id=room_id, hotel_id=hotel_id)
+    await  db.commit()
+    return {"status": status.HTTP_200_OK}
 
 
 @router.delete("/{hotel_id}/rooms/{room_id}", summary='Удалить отели')
-async def delete_hotel(hotel_id: int, room_id: int):
-    async with async_session_marker() as session:
-        await RoomRepository(session=session).delete(id=room_id, hotel_id=hotel_id)
-        await session.commit()
-        return {"status": status.HTTP_200_OK}
+async def delete_hotel(hotel_id: int, room_id: int, db: DBDep, ):
+    await db.rooms.delete(id=room_id, hotel_id=hotel_id)
+    await db.commit()
+    return {"status": status.HTTP_200_OK}
