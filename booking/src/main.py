@@ -9,13 +9,13 @@ sys.path.append(str(Path(__file__).parent.parent))
 from src.api.hotels import router as hotels_router
 from src.api.users import router as users_router
 from src.api.rooms import router as rooms_router
-
-from src.database import *
+from src.api.bookings import router as bookings_router
 
 app = FastAPI()
 app.include_router(router=users_router)
 app.include_router(router=hotels_router)
 app.include_router(router=rooms_router)
+app.include_router(router=bookings_router)
 
 if __name__ == "__main__":
     uvicorn.run(app="main:app", host="127.0.0.1", port=8000, reload=True)

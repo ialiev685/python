@@ -33,7 +33,7 @@ async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
 )):
     hotel = await db.hotels.get_one_or_none(id=hotel_id)
     if hotel is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Отель не найден')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
     _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
     room = await db.rooms.add(data=_room)
     await db.commit()

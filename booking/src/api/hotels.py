@@ -42,10 +42,9 @@ async def get_hotels(
 
 
 @router.get('/{hotel_id}', summary='Получить отель')
-async def get_hotel(hotel_id: int):
-    async with async_session_marker() as session:
-        hotel = await  HotelsRepository(session).get_by_id(id=hotel_id)
-        return {"status": status.HTTP_200_OK, 'data': hotel}
+async def get_hotel(hotel_id: int, db: DBDep):
+    hotel = await db.hotels.get_one_or_none(id=hotel_id)
+    return {"status": status.HTTP_200_OK, 'data': hotel}
 
 
 @router.post("", summary="Добавить отель")

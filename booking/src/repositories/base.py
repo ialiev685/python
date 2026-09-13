@@ -19,12 +19,6 @@ class BaseRepository:
     async def get_all(self, *args, **kwargs):
         return self.get_filtered(**kwargs)
 
-    async def get_by_id(self, **filter_by):
-        query = select(self.model).filter_by(**filter_by)
-        result = await self.session.execute(query)
-        model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
-
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
