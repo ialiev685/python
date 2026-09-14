@@ -13,24 +13,6 @@ class HotelsRepository(BaseRepository):
     model = HotelsModel
     schema = HotelSchema
 
-    # async def get_all(
-    #         self,
-    #         title,
-    #         location,
-    #         offset,
-    #         limit,
-    # ):
-    #     query = select(HotelsModel)
-    #     if title:
-    #         query = query.where(HotelsModel.title.icontains(title))
-    #     if location:
-    #         query = query.where(HotelsModel.location.icontains(location))
-    #
-    #     query = query.limit(limit).offset(offset)
-    #     self.debug(request=query)
-    #     result = await self.session.execute(query)
-    #     return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
-
     async def get_filtered_by_time(self, date_from: date, date_to: date, offset: int, limit: int, title: str | None,
                                    location: str | None):
         rooms_ids_for_booking = await get_rooms_ids_for_booking(date_from=date_from, date_to=date_to)
