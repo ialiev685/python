@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Query
+from typing import Annotated
 
 from src.schemas.bookings import BookingAddRequestSchema
 from src.api.dependencies import DBDep, UserIdDep
 from src.schemas.bookings import BookingAddSchema
 from src.schemas.bookings import BookingSchema
+from datetime import date
 
 router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
@@ -18,9 +20,13 @@ async def create_order(data: BookingAddRequestSchema, user_id: UserIdDep, db: DB
     return {"status": status.HTTP_200_OK, 'data': order}
 
 
-@router.get('', summary='Получение броней', response_model=list[BookingSchema])
-async def get_bookings(db: DBDep):
-    return await db.bookings.get_all()
+@router.get('', summary='Получение броней')
+async def get_bookings(db: DBDep, hotel_id: int,
+                       date_from: date = Query(
+                           description='Пример: 2024-09-13'),
+                       date_to: date = Query(
+                           description='Пример: 2024-09-21')):
+    return await  db.bookings.get_filtered_by_date(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
 
 
 @router.get('/me', summary='Получение броней пользователя', response_model=list[BookingSchema])

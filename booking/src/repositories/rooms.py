@@ -1,4 +1,8 @@
+from datetime import date
+
 from sqlalchemy import select
+
+from src.repositories.utils import get_rooms_ids_for_booking
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsModel
 from src.schemas.rooms import RoomSchema
@@ -8,18 +12,6 @@ class RoomRepository(BaseRepository):
     model = RoomsModel
     schema = RoomSchema
 
-    # async def get_all(
-    #         self,
-    #         title,
-    #         description,
-    #         hotel_id
-    # ):
-    #     query = select(RoomsModel).where(RoomsModel.hotel_id == hotel_id)
-    #     if title:
-    #         query = query.where(RoomsModel.title.icontains(title))
-    #     if description:
-    #         query = query.where(RoomsModel.description.icontains(description))
-    #
-    #     self.debug(request=query)
-    #     result = await self.session.execute(query)
-    #     return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+    async def get_filtered_by_time(self, hotel_id: int, date_from: date, date_to: date):
+        rooms_ids_for_booking = await get_rooms_ids_for_booking(date_from=date_from, date_to=date_to, hotel_id=hotel_id)
+        return await self.get_filtered(RoomsModel.id.in_(rooms_ids_for_booking))

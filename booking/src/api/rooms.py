@@ -1,8 +1,5 @@
-from fastapi import APIRouter, status, Body, HTTPException
-
-from src.database import async_session_marker
-from src.repositories.rooms import RoomRepository
-from src.repositories.hotels import HotelsRepository
+from datetime import date
+from fastapi import APIRouter, status, Body, HTTPException, Query
 
 from src.schemas.rooms import RoomAddSchema, RoomPatchSchema, RoomAddRequestSchema, RoomPatchRequestSchema
 from src.api.dependencies import DBDep
@@ -11,8 +8,11 @@ router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
 
 @router.get('/{hotel_id}/rooms')
-async def get_rooms(hotel_id: int, db: DBDep, ):
-    rooms = await db.rooms.get_filtered(hotel_id=hotel_id)
+async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
+    description='Пример: 2024-09-13'),
+                    date_to: date = Query(
+                        description='Пример: 2024-09-21')):
+    rooms = await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
     return {'status': status.HTTP_200_OK, 'data': rooms}
 
 
