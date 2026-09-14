@@ -29,24 +29,23 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 @router.get("", summary="Получить все отели")
 async def get_hotels(
-        # pagination: PaginationParamsDep,
+        pagination: PaginationParamsDep,
         db: DBDep,
         date_from: date = Query(
             description='Пример: 2024-09-13'),
         date_to: date = Query(
-            description='Пример: 2024-09-21')
-        # title: str | None = Query(None, description="Название отеля"),
-        # location: str | None = Query(None, description="Локация отеля"),
+            description='Пример: 2024-09-21'),
+        title: str | None = Query(None, description="Название отеля"),
+        location: str | None = Query(None, description="Локация отеля"),
 ):
-    # per_page = pagination.per_page or 10
-    # return await db.hotels.get_all(
-    #     title=title,
-    #     location=location,
-    #     offset=(pagination.page - 1) * per_page,
-    #     limit=per_page,
-    # )
+    per_page = pagination.per_page or 10
     return await db.hotels.get_filtered_by_time(
-        date_from=date_from, date_to=date_to
+        date_from=date_from,
+        date_to=date_to,
+        title=title,
+        location=location,
+        offset=(pagination.page - 1) * per_page,
+        limit=per_page,
     )
 
 
@@ -93,7 +92,7 @@ async def update_hotel_put(hotel_id: int, data: HotelAddSchema, db: DBDep, ):
     return {"status": status.HTTP_200_OK}
 
 
-@router.delete("/{hotel_id}", summary='Удалить отели')
+@router.delete("/{hotel_id}", summary='Удалить отель')
 async def delete_hotel(hotel_id: int, db: DBDep, ):
     await db.hotels.delete(id=hotel_id)
     await db.commit()

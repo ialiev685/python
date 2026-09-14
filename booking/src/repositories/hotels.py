@@ -31,10 +31,19 @@ class HotelsRepository(BaseRepository):
     #     result = await self.session.execute(query)
     #     return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
 
-    async def get_filtered_by_time(self, date_from: date, date_to: date):
+    async def get_filtered_by_time(self, date_from: date, date_to: date, offset: int, limit: int, title: str | None,
+                                   location: str | None):
         rooms_ids_for_booking = await get_rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotels_ids = select(RoomsModel.hotel_id).filter(RoomsModel.id.in_(rooms_ids_for_booking))
         query = select(HotelsModel).filter(HotelsModel.id.in_(hotels_ids))
+
+        if title:
+            query = query.filter(HotelsModel.title.icontains(title))
+        if location:
+            query = query.filter(HotelsModel.location.icontains(location))
+
+        query = query.limit(limit).offset(offset)
+        self.debug(request=query)
         result = await self.session.execute(query)
 
         return [HotelSchema.model_validate(model, from_attributes=True) for model in result.scalars().all()]

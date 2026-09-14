@@ -13,6 +13,7 @@ class BaseRepository:
 
     async def get_filtered(self, *args, **kwargs):
         query = select(self.model).filter(*args).filter_by(**kwargs)
+        self.debug(request=query)
         result = await self.session.execute(query)
         return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
 
@@ -21,6 +22,7 @@ class BaseRepository:
 
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
+        self.debug(request=query)
         result = await self.session.execute(query)
         model = result.scalars().one_or_none()
         if model is None:

@@ -7,7 +7,7 @@ from src.api.dependencies import DBDep
 router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
 
-@router.get('/{hotel_id}/rooms')
+@router.get('/{hotel_id}/rooms', summary="Получить номера")
 async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
     description='Пример: 2024-09-13'),
                     date_to: date = Query(
@@ -57,7 +57,7 @@ async def update_room_put(hotel_id: int, room_id: int, data: RoomAddRequestSchem
     return {"status": status.HTTP_200_OK}
 
 
-@router.delete("/{hotel_id}/rooms/{room_id}", summary='Удалить отели')
+@router.delete("/{hotel_id}/rooms/{room_id}", summary='Удалить номер')
 async def delete_hotel(hotel_id: int, room_id: int, db: DBDep, ):
     await db.rooms.delete(id=room_id, hotel_id=hotel_id)
     await db.commit()
