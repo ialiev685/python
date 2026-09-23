@@ -6,6 +6,7 @@ class RoomAddRequestSchema(BaseModel):
     description: str
     price: int
     quantity: int
+    convenience_ids: list[int] | None
 
 
 class RoomAddSchema(BaseModel):

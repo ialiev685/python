@@ -2,6 +2,7 @@ from datetime import date
 from fastapi import APIRouter, status, Body, HTTPException, Query
 
 from src.schemas.rooms import RoomAddSchema, RoomPatchSchema, RoomAddRequestSchema, RoomPatchRequestSchema
+from src.schemas.conveniences import RoomConvenienceAddRequestSchema
 from src.api.dependencies import DBDep
 
 router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
@@ -22,12 +23,12 @@ async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
         "1": {
             "summary": "Номер люкс",
             "value": {"title": "Номер люкс", "description": "Двухместный номер с видом на море. Бесплатный бар.",
-                      "price": 100000, "quantity": 1},
+                      "price": 100000, "quantity": 1, "convenience_ids": [1, 2, 3], },
         },
         "2": {
             "summary": "Номер стандарт",
             "value": {"title": "Номер стандарт", "description": "Одноместный номер. Платный бар.", "price": 50000,
-                      "quantity": 1},
+                      "quantity": 1, "convenience_ids": [1, 2, 3], },
         },
     }
 )):
@@ -36,6 +37,10 @@ async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
     _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
     room = await db.rooms.add(data=_room)
+    if data.convenience_ids is not None:
+        room_conveniences = [RoomConvenienceAddRequestSchema(room_id=room.id, convenience_id=id_item) for id_item in
+                             data.convenience_ids]
+        await db.room_conveniences.add_bulk(data=room_conveniences)
     await db.commit()
 
     return {"status": status.HTTP_200_OK, 'data': room}

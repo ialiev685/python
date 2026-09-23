@@ -7,3 +7,12 @@ class ConvenienceAddRequestSchema(BaseModel):
 
 class ConvenienceSchema(ConvenienceAddRequestSchema):
     id: int
+
+
+class RoomConvenienceAddRequestSchema(BaseModel):
+    room_id: int
+    convenience_id: int
+
+
+class RoomConvenienceSchema(BaseModel):
+    id: int
