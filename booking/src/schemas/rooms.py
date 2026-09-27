@@ -6,7 +6,7 @@ class RoomAddRequestSchema(BaseModel):
     description: str
     price: int
     quantity: int
-    convenience_ids: list[int] | None
+    convenience_ids: list[int] = []
 
 
 class RoomAddSchema(BaseModel):
@@ -25,7 +25,7 @@ class RoomPatchRequestSchema(BaseModel):
     title: str | None = Field(None)
     description: str | None = Field(None)
     price: int | None = Field(None)
-    convenience_ids: list[int] | None = Field(None)
+    convenience_ids: list[int] = []
 
 
 class RoomPatchSchema(BaseModel):

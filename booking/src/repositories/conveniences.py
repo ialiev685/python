@@ -1,8 +1,5 @@
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import delete
-from fastapi import HTTPException
-from pydantic import BaseModel
+from sqlalchemy import delete, select
 
 from src.schemas.conveniences import ConvenienceSchema, RoomConvenienceSchema
 from src.repositories.base import BaseRepository
@@ -18,29 +15,21 @@ class RoomConveniencesRepository(BaseRepository):
     model = RoomConveniencesModel
     schema = RoomConvenienceSchema
 
-    async def edit_bulk(self, data: list[BaseModel], exclude_unset: bool = False, **filter_by):
-        try:
-            update_hotel_stmt = (
-                insert(RoomConveniencesModel)
-                .values([item.model_dump(exclude_unset=exclude_unset) for item in data])
-                .on_conflict_do_nothing(
-                    index_elements=[RoomConveniencesModel.room_id, RoomConveniencesModel.convenience_id]
-                )
-                .returning(RoomConveniencesModel)
-            )
-            self.debug(request=update_hotel_stmt)
-            conveniences_ids = await self.session.execute(update_hotel_stmt)
+    async def set_room_conveniences(self, room_id: int, convenience_ids: list[int]):
+        query = select(self.model.convenience_id).filter_by(room_id=room_id)
+        response = await  self.session.execute(query)
+        current_convenience_ids: list[int] = response.scalars().all()
 
-            ids = [RoomConvenienceSchema.model_validate(model, from_attributes=True) for model in
-                   conveniences_ids.scalars().all()]
-            return ids
-        except IntegrityError:
-            raise HTTPException(status_code=400, detail="Заданые удобства не существуют")
+        delete_convenience_ids: list[int] = list(set(current_convenience_ids) - set(convenience_ids))
+        insert_convenience_ids: list[int] = list(set(convenience_ids) - set(current_convenience_ids))
 
-    async def delete_bulk(self, room_id: int, convenience_ids: list[int]) -> None:
-        delete_hotel_stmt = delete(RoomConveniencesModel).filter(
-            RoomConveniencesModel.room_id == room_id,
-            RoomConveniencesModel.convenience_id.notin_(convenience_ids)
-        )
-        self.debug(request=delete_hotel_stmt)
-        await self.session.execute(delete_hotel_stmt)
+        if delete_convenience_ids:
+            delete_stmt = delete(self.model).filter(
+                self.model.room_id == room_id,
+                self.model.convenience_id.in_(delete_convenience_ids))
+            await self.session.execute(delete_stmt)
+
+        if insert_convenience_ids:
+            insert_stmt = insert(self.model).values(
+                [{'room_id': room_id, 'convenience_id': _id} for _id in insert_convenience_ids])
+            await self.session.execute(insert_stmt)

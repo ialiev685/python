@@ -48,28 +48,22 @@ async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
 
 @router.patch("/{hotel_id}/rooms/{room_id}", summary="Частичное обновление")
 async def update_room_patch(hotel_id: int, room_id: int, data: RoomPatchRequestSchema, db: DBDep, ):
+    _room_dict = data.model_dump()
     _room = RoomPatchSchema(**data.model_dump(exclude_unset=True), hotel_id=hotel_id)
     await db.rooms.edit(data=_room, exclude_unset=True, id=room_id, hotel_id=hotel_id)
-    if data.convenience_ids is not None:
-        await db.room_conveniences.edit_bulk(
-            data=[RoomConvenienceAddRequestSchema(room_id=room_id, convenience_id=_id) for _id in data.convenience_ids],
-            exclude_unset=True)
-        await db.room_conveniences.delete_bulk(room_id, convenience_ids=data.convenience_ids)
-
+    if 'convenience_ids' in _room_dict:
+        await db.room_conveniences.set_room_conveniences(room_id=room_id, convenience_ids=data.convenience_ids)
     await  db.commit()
+
     return {"status": status.HTTP_200_OK}
 
 
 @router.put("/{hotel_id}/rooms/{room_id}/", summary="Полное обновление")
-async def update_room_put(hotel_id: int, room_id: int, data: RoomAddRequestSchema, db: DBDep, ):
+async def update_room_put(hotel_id: int, room_id: int, data: RoomAddRequestSchema, db: DBDep):
     _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
     await db.rooms.edit(data=_room, id=room_id, hotel_id=hotel_id)
-    if data.convenience_ids is not None:
-        await db.room_conveniences.edit_bulk(
-            data=[RoomConvenienceAddRequestSchema(room_id=room_id, convenience_id=_id) for _id in data.convenience_ids],
-            exclude_unset=True)
-        await db.room_conveniences.delete_bulk(room_id, convenience_ids=data.convenience_ids)
-    await  db.commit()
+    await db.room_conveniences.set_room_conveniences(room_id=room_id, convenience_ids=data.convenience_ids)
+    await db.commit()
     return {"status": status.HTTP_200_OK}
 
 
