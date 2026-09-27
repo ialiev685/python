@@ -1,14 +1,14 @@
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
 from src.config import settings
-from src.schemas.hotels import HotelSchema
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 
 class BaseRepository:
     model = None
     schema = None
 
-    def __init__(self, session):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
     async def get_filtered(self, *args, **kwargs):

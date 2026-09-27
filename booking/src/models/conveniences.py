@@ -1,4 +1,4 @@
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from src.database import Base
 
@@ -16,3 +16,7 @@ class RoomConveniencesModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     room_id: Mapped[int] = mapped_column(ForeignKey('rooms.id'))
     convenience_id: Mapped[int] = mapped_column(ForeignKey('conveniences.id'))
+
+    __table_args__ = (
+        UniqueConstraint('convenience_id', 'room_id'),
+    )

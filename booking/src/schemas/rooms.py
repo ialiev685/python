@@ -25,6 +25,7 @@ class RoomPatchRequestSchema(BaseModel):
     title: str | None = Field(None)
     description: str | None = Field(None)
     price: int | None = Field(None)
+    convenience_ids: list[int] | None = Field(None)
 
 
 class RoomPatchSchema(BaseModel):
