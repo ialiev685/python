@@ -19,7 +19,7 @@ async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
 
 @router.get('/{hotel_id}/rooms/{room_id}', summary="Получить номер")
 async def get_rooms(hotel_id: int, room_id: int, db: DBDep):
-    rooms = await db.rooms.get_filtered_with_conveniences(hotel_id=hotel_id, room_id=room_id)
+    rooms = await db.rooms.get_filtered_with_conveniences(hotel_id=hotel_id, id=room_id)
     return {'status': status.HTTP_200_OK, 'data': rooms}
 
 
