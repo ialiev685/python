@@ -17,6 +17,12 @@ async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
     return {'status': status.HTTP_200_OK, 'data': rooms}
 
 
+@router.get('/{hotel_id}/rooms/{room_id}', summary="Получить номер")
+async def get_rooms(hotel_id: int, room_id: int, db: DBDep):
+    rooms = await db.rooms.get_filtered_with_conveniences(hotel_id=hotel_id, room_id=room_id)
+    return {'status': status.HTTP_200_OK, 'data': rooms}
+
+
 @router.post('/{hotel_id}/rooms', summary='Добавить номер отеля')
 async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
     openapi_examples={

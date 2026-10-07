@@ -1,5 +1,5 @@
 from sqlalchemy import String, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
 
 
@@ -8,6 +8,8 @@ class ConveniencesModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(length=100))
+
+    rooms: Mapped[list['RoomsModel']] = relationship(secondary='room_conveniences', back_populates='conveniences')
 
 
 class RoomConveniencesModel(Base):
