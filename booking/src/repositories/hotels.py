@@ -2,6 +2,7 @@ from datetime import date
 
 from sqlalchemy import select
 
+from src.repositories.mapper.mappers import HotelsDataMapper
 from src.repositories.utils import get_rooms_ids_for_booking
 from src.repositories.base import BaseRepository
 from src.models.hotels import HotelsModel
@@ -11,7 +12,7 @@ from src.models.rooms import RoomsModel
 
 class HotelsRepository(BaseRepository):
     model = HotelsModel
-    schema = HotelSchema
+    mapper = HotelsDataMapper
 
     async def get_filtered_by_time(self, date_from: date, date_to: date, offset: int, limit: int, title: str | None,
                                    location: str | None):
@@ -28,4 +29,4 @@ class HotelsRepository(BaseRepository):
         self.debug(request=query)
         result = await self.session.execute(query)
 
-        return [HotelSchema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+        return [self.mapper.from_orm(model) for model in result.scalars().all()]

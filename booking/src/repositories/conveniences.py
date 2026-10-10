@@ -1,6 +1,7 @@
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import delete, select
 
+from src.repositories.mapper.mappers import ConveniencesDataMapper, RoomConveniencesDataMapper
 from src.schemas.conveniences import ConvenienceSchema, RoomConvenienceSchema
 from src.repositories.base import BaseRepository
 from src.models.conveniences import ConveniencesModel, RoomConveniencesModel
@@ -8,12 +9,12 @@ from src.models.conveniences import ConveniencesModel, RoomConveniencesModel
 
 class ConveniencesRepository(BaseRepository):
     model = ConveniencesModel
-    schema = ConvenienceSchema
+    mapper = ConveniencesDataMapper
 
 
 class RoomConveniencesRepository(BaseRepository):
     model = RoomConveniencesModel
-    schema = RoomConvenienceSchema
+    mapper = RoomConveniencesDataMapper
 
     async def set_room_conveniences(self, room_id: int, convenience_ids: list[int]):
         query = select(self.model.convenience_id).filter_by(room_id=room_id)

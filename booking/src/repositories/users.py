@@ -2,15 +2,16 @@ from sqlalchemy import select
 from pydantic import EmailStr
 from src.repositories.base import BaseRepository
 from src.models.users import UsersModel
-from src.schemas.users import User, UserWithHashedPasswordSchema
+
+from src.repositories.mapper.mappers import UsersDataMapper, UserWithHashedPasswordDataMapper
 
 
 class UsersRepository(BaseRepository):
     model = UsersModel
-    schema = User
+    mapper = UsersDataMapper
 
     async def get_one_or_none_with_hashed_password(self, email: EmailStr):
         query = select(self.model).filter_by(email=email)
         result = await self.session.execute(query)
         model = result.scalars().one()
-        return UserWithHashedPasswordSchema.model_validate(model, from_attributes=True)
+        return UserWithHashedPasswordDataMapper.from_orm(model)

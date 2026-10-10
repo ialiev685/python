@@ -11,10 +11,10 @@ class UserAddSchema(BaseModel):
     hashed_password: str
 
 
-class User(BaseModel):
+class UserSchema(BaseModel):
     id: int
     email: EmailStr
 
 
-class UserWithHashedPasswordSchema(User):
+class UserWithHashedPasswordSchema(UserSchema):
     hashed_password: str

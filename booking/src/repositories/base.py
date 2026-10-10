@@ -1,12 +1,14 @@
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
+
+from src.repositories.mapper.base import DataMapper
 from src.config import settings
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 
 class BaseRepository:
     model = None
-    schema = None
+    mapper: DataMapper = None
 
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -15,7 +17,7 @@ class BaseRepository:
         query = select(self.model).filter(*args).filter_by(**kwargs)
         self.debug(request=query)
         result = await self.session.execute(query)
-        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+        return [self.mapper.from_orm(model) for model in result.scalars().all()]
 
     async def get_all(self, *args, **kwargs):
         return await self.get_filtered(**kwargs)
@@ -27,14 +29,14 @@ class BaseRepository:
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.from_orm(model)
 
     async def add(self, data: BaseModel):
         add_hotel_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         self.debug(request=add_hotel_stmt)
         hotel = await self.session.execute(add_hotel_stmt)
         model = hotel.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.from_orm(model)
 
     async def add_bulk(self, data: list[BaseModel]):
         add_hotel_stmt = insert(self.model).values([item.model_dump() for item in data]).returning(self.model)
@@ -44,7 +46,8 @@ class BaseRepository:
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
         update_hotel_stmt = (update(self.model)
                              .filter_by(**filter_by)
-                             .values(**data.model_dump(exclude_unset=exclude_unset)))
+                             .values(**data.model_dump(exclude_unset=exclude_unset))
+                             )
         self.debug(request=update_hotel_stmt)
         await self.session.execute(update_hotel_stmt)
 
