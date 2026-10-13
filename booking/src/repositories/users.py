@@ -12,6 +12,7 @@ class UsersRepository(BaseRepository):
 
     async def get_one_or_none_with_hashed_password(self, email: EmailStr):
         query = select(self.model).filter_by(email=email)
+        self.debug(request=query)
         result = await self.session.execute(query)
         model = result.scalars().one()
         return UserWithHashedPasswordDataMapper.from_orm(model)

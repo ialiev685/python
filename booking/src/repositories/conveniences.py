@@ -28,9 +28,11 @@ class RoomConveniencesRepository(BaseRepository):
             delete_stmt = delete(self.model).filter(
                 self.model.room_id == room_id,
                 self.model.convenience_id.in_(delete_convenience_ids))
+            self.debug(request=delete_stmt)
             await self.session.execute(delete_stmt)
 
         if insert_convenience_ids:
             insert_stmt = insert(self.model).values(
                 [{'room_id': room_id, 'convenience_id': _id} for _id in insert_convenience_ids])
+            self.debug(request=insert_stmt)
             await self.session.execute(insert_stmt)
