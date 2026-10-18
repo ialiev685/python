@@ -18,7 +18,7 @@ class RoomConveniencesRepository(BaseRepository):
 
     async def set_room_conveniences(self, room_id: int, convenience_ids: list[int]):
         query = select(self.model.convenience_id).filter_by(room_id=room_id)
-        response = await  self.session.execute(query)
+        response = await self.session.execute(query)
         current_convenience_ids: list[int] = response.scalars().all()
 
         delete_convenience_ids: list[int] = list(set(current_convenience_ids) - set(convenience_ids))
