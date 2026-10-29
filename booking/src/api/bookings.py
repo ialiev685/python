@@ -1,5 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Query
-from typing import Annotated
+from fastapi import APIRouter, status, HTTPException
 
 from src.schemas.bookings import BookingAddRequestSchema
 from src.api.dependencies import DBDep, UserIdDep
