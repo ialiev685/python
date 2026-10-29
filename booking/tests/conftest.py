@@ -17,8 +17,14 @@ def check_test_mode():
     assert settings.MODE == "TEST"
 
 
+@pytest.fixture(scope="function")
+async def db() -> DBManager:
+    async with DBManager(async_session_marker_null_pool) as _db:
+        yield _db
+
+
 @pytest.fixture(scope="session", autouse=True)
-async def create_tables(check_test_mode) -> None:
+async def setup_database(check_test_mode) -> None:
     async with engine_null_pool.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -35,8 +41,13 @@ async def create_tables(check_test_mode) -> None:
         await db.commit()
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def create_user(create_tables):
+@pytest.fixture(scope="session")
+async def ac() -> AsyncClient:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.post("/auth/register", json={'email': 'test@test.ru', 'password': '123456'})
-        assert response.status_code == 200
+        yield ac
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def create_user(setup_database, ac):
+    response = await ac.post("/auth/register", json={'email': 'test@test.ru', 'password': '123456'})
+    assert response.status_code == 200
