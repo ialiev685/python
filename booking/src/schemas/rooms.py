@@ -5,7 +5,7 @@ from src.schemas.conveniences import ConvenienceSchema
 
 class RoomAddRequestSchema(BaseModel):
     title: str
-    description: str
+    description: str | None = Field(None)
     price: int
     quantity: int
     convenience_ids: list[int] = []
@@ -13,7 +13,7 @@ class RoomAddRequestSchema(BaseModel):
 
 class RoomAddSchema(BaseModel):
     title: str
-    description: str
+    description: str | None = Field(None)
     hotel_id: int
     price: int
     quantity: int

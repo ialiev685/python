@@ -7,7 +7,7 @@ class RoomsModel(Base):
     __tablename__ = "rooms"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(String(length=30))
+    title: Mapped[str] = mapped_column(String(length=100))
     description: Mapped[str | None]
     hotel_id: Mapped[int] = mapped_column(ForeignKey("hotels.id"))
     price: Mapped[int]

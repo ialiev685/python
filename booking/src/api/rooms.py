@@ -43,7 +43,7 @@ async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
     _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
     room = await db.rooms.add(data=_room)
-    if data.convenience_ids is not None:
+    if data.convenience_ids:
         room_conveniences = [RoomConvenienceAddRequestSchema(room_id=room.id, convenience_id=id_item) for id_item in
                              data.convenience_ids]
         await db.room_conveniences.add_bulk(data=room_conveniences)
