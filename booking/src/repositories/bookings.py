@@ -12,12 +12,12 @@ class BookingRepository(BaseRepository):
 
     async def add_booking(self, data: BookingAddSchema):
         rooms_ids_for_booking = await get_rooms_ids_for_booking(date_from=data.date_from, date_to=data.date_to)
-        query_filtered = rooms_ids_for_booking.filter_by(room_id=data.room_id)
-        result = await self.session.execute(query_filtered)
-        rooms = result.scalar_one_or_none()
-        if rooms is None:
+        result = await self.session.execute(rooms_ids_for_booking)
+        rooms_ids = result.scalars().all()
+        if data.room_id in rooms_ids:
+            return await self.add(data=data)
+        else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Номер отеля не доступен для бронирования в указанный период"
             )
-        return await self.add(data=data)
