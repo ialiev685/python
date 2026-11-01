@@ -1,6 +1,12 @@
+from unittest import mock
+
+# мокаем кэширование
+mock.patch('fastapi_cache.decorator.cache', lambda *args, **kwargs: lambda func: func).start()
 import pytest
+
 import json
 
+from src.api.dependencies import get_db
 from schemas.hotels import HotelAddSchema
 from schemas.rooms import RoomAddRequestSchema, RoomAddSchema
 from src.database import engine_null_pool, async_session_marker_null_pool
@@ -17,10 +23,19 @@ def check_test_mode():
     assert settings.MODE == "TEST"
 
 
-@pytest.fixture(scope="function")
-async def db() -> DBManager:
+async def get_db_with_null_pool() -> DBManager:
     async with DBManager(async_session_marker_null_pool) as _db:
         yield _db
+
+
+@pytest.fixture(scope="function")
+async def db() -> DBManager:
+    async for _db in get_db_with_null_pool():
+        yield _db
+
+
+# подменяем DBmanager в зависимостях на тестовую сессию
+app.dependency_overrides[get_db] = get_db_with_null_pool
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Body, HTTPException, Query
+from fastapi import APIRouter, status
 from fastapi_cache.decorator import cache
 from src.schemas.conveniences import ConvenienceAddRequestSchema
 from src.api.dependencies import DBDep
@@ -9,7 +9,6 @@ router = APIRouter(prefix="/conveniences", tags=["Удобства"])
 @router.get('')
 @cache(expire=60)
 async def get_conveniences(db: DBDep):
-    print('ИДУ в БАЗУ')
     return await db.conveniences.get_all()
 
 
