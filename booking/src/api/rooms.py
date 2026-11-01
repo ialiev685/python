@@ -8,6 +8,12 @@ from src.api.dependencies import DBDep
 router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
 
+@router.get('/rooms', summary="Получить все номера")
+async def get_rooms(db: DBDep):
+    rooms = await db.rooms.get_all()
+    return {'status': status.HTTP_200_OK, 'data': rooms}
+
+
 @router.get('/{hotel_id}/rooms', summary="Получить номера")
 async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
     description='Пример: 2024-09-13'),
