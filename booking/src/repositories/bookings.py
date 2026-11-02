@@ -10,8 +10,11 @@ class BookingRepository(BaseRepository):
     model = BookingsModel
     mapper = BookingDataMapper
 
-    async def add_booking(self, data: BookingAddSchema):
-        rooms_ids_for_booking = await get_rooms_ids_for_booking(date_from=data.date_from, date_to=data.date_to)
+    async def add_booking(self, data: BookingAddSchema, hotel_id: int) -> BookingAddSchema:
+        rooms_ids_for_booking = await get_rooms_ids_for_booking(
+            date_from=data.date_from, date_to=data.date_to,
+            hotel_id=hotel_id
+        )
         result = await self.session.execute(rooms_ids_for_booking)
         rooms_ids = result.scalars().all()
         if data.room_id in rooms_ids:

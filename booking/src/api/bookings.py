@@ -13,7 +13,11 @@ async def create_order(data: BookingAddRequestSchema, user_id: UserIdDep, db: DB
     room = await db.rooms.get_one_or_none(id=data.room_id)
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Номер отеля не найден')
-    order = await db.bookings.add_booking(data=BookingAddSchema(**data.model_dump(), user_id=user_id, price=room.price))
+
+    order = await db.bookings.add_booking(
+        data=BookingAddSchema(**data.model_dump(), user_id=user_id, price=room.price),
+        hotel_id=room.hotel_id
+    )
     await db.commit()
     return {"status": status.HTTP_200_OK, 'data': order}
 
