@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, Response, Request
-from schemas.users import UserRequestAddSchema, UserAddSchema
+from src.schemas.users import UserRequestAddSchema, UserAddSchema
 from src.services.auth import AuthService
 from src.database import async_session_marker
 from src.repositories.users import UsersRepository
@@ -37,6 +37,8 @@ async def login_user(data: UserRequestAddSchema, response: Response):
 async def get_me(user_id: UserIdDep):
     async with async_session_marker() as session:
         user = await UsersRepository(session=session).get_one_or_none(id=user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Не авторизирован')
         return user
 
 
