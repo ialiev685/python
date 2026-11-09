@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
 
@@ -38,7 +40,7 @@ class BaseRepository:
         model = hotel.scalars().one()
         return self.mapper.from_orm(model)
 
-    async def add_bulk(self, data: list[BaseModel]):
+    async def add_bulk(self, data: Sequence[BaseModel]):
         add_hotel_stmt = insert(self.model).values([item.model_dump() for item in data]).returning(self.model)
         self.debug(request=add_hotel_stmt)
         await self.session.execute(add_hotel_stmt)
