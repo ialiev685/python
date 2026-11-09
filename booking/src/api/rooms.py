@@ -9,7 +9,7 @@ router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
 
 @router.get('/rooms', summary="Получить все номера")
-async def get_rooms(db: DBDep):
+async def get_all_rooms(db: DBDep):
     rooms = await db.rooms.get_all()
     return {'status': status.HTTP_200_OK, 'data': rooms}
 
@@ -24,7 +24,7 @@ async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
 
 
 @router.get('/{hotel_id}/rooms/{room_id}', summary="Получить номер")
-async def get_rooms(hotel_id: int, room_id: int, db: DBDep):
+async def get_room(hotel_id: int, room_id: int, db: DBDep):
     rooms = await db.rooms.get_filtered_with_conveniences(hotel_id=hotel_id, id=room_id)
     return {'status': status.HTTP_200_OK, 'data': rooms}
 

@@ -6,7 +6,6 @@ from src.repositories.mapper.mappers import HotelsDataMapper
 from src.repositories.utils import get_rooms_ids_for_booking
 from src.repositories.base import BaseRepository
 from src.models.hotels import HotelsModel
-from src.schemas.hotels import HotelSchema
 from src.models.rooms import RoomsModel
 
 

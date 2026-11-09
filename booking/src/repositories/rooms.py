@@ -3,13 +3,10 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from src.repositories.mapper.base import DataMapper
 from src.repositories.mapper.mappers import RoomWithConveniencesDataMapper, RoomDataMapper
 from src.repositories.utils import get_rooms_ids_for_booking
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsModel
-
-from src.schemas.rooms import RoomSchema, RoomSchemaWithConveniences
 
 
 class RoomRepository(BaseRepository):

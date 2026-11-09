@@ -1,6 +1,10 @@
 from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+import typing
 from src.database import Base
+
+if typing.TYPE_CHECKING:
+    from src.models.rooms import RoomsModel
 
 
 class ConveniencesModel(Base):

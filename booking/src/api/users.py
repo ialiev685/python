@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Response, Request
+from fastapi import APIRouter, status, HTTPException, Response
 from src.schemas.users import UserRequestAddSchema, UserAddSchema
 from src.services.auth import AuthService
 from src.database import async_session_marker

@@ -3,3 +3,11 @@ from src.models.rooms import RoomsModel
 from src.models.users import UsersModel
 from src.models.bookings import BookingsModel
 from src.models.conveniences import ConveniencesModel
+
+__all__ = [
+    "HotelsModel",
+    'RoomsModel',
+    'UsersModel',
+    'BookingsModel',
+    'ConveniencesModel',
+]

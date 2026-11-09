@@ -2,7 +2,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import delete, select
 
 from src.repositories.mapper.mappers import ConveniencesDataMapper, RoomConveniencesDataMapper
-from src.schemas.conveniences import ConvenienceSchema, RoomConvenienceSchema
 from src.repositories.base import BaseRepository
 from src.models.conveniences import ConveniencesModel, RoomConveniencesModel
 
