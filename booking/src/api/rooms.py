@@ -1,6 +1,7 @@
 from datetime import date
 from fastapi import APIRouter, status, Body, HTTPException, Query
 
+from src.exceptions import IncorrectDateRangeException, NotFoundException
 from src.schemas.rooms import RoomAddSchema, RoomPatchSchema, RoomAddRequestSchema, RoomPatchRequestSchema
 from src.schemas.conveniences import RoomConvenienceAddRequestSchema
 from src.api.dependencies import DBDep
@@ -19,7 +20,10 @@ async def get_rooms(hotel_id: int, db: DBDep, date_from: date = Query(
     description='Пример: 2024-09-13'),
                     date_to: date = Query(
                         description='Пример: 2024-09-21')):
-    rooms = await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
+    try:
+        rooms = await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
+    except IncorrectDateRangeException as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error.detail))
     return {'status': status.HTTP_200_OK, 'data': rooms}
 
 
@@ -44,9 +48,10 @@ async def add_room(hotel_id: int, db: DBDep, data: RoomAddRequestSchema = Body(
         },
     }
 )):
-    hotel = await db.hotels.get_one_or_none(id=hotel_id)
-    if hotel is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Отель не найден')
+    try:
+        await db.hotels.get_one(id=hotel_id)
+    except NotFoundException:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Отель с id {hotel_id} не найден")
     _room = RoomAddSchema(**data.model_dump(), hotel_id=hotel_id)
     room = await db.rooms.add(data=_room)
     if data.convenience_ids:

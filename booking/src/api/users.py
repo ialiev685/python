@@ -1,4 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Response
+
+from src.exceptions import ConflictException, NotFoundException
 from src.schemas.users import UserRequestAddSchema, UserAddSchema
 from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DBDep
@@ -9,20 +11,25 @@ router = APIRouter(prefix="/auth", tags=["Авторизация и аутент
 @router.post("/register")
 async def register_user(data: UserRequestAddSchema, db: DBDep):
     hashed_password = AuthService().password_hash.hash(data.password)
-    await  db.users.add(
-        data=UserAddSchema(email=data.email, hashed_password=hashed_password)
-    )
-    await db.commit()
+    try:
+
+        await  db.users.add(
+            data=UserAddSchema(email=data.email, hashed_password=hashed_password)
+        )
+        await db.commit()
+    except ConflictException:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пользователь с таким email уже существует.")
 
     return {"status": status.HTTP_200_OK}
 
 
 @router.post('/login')
 async def login_user(data: UserRequestAddSchema, response: Response, db: DBDep):
-    user = await db.users.get_one_or_none_with_hashed_password(email=data.email)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f"Пользователь с {data.email} не существует.")
+    try:
+        user = await db.users.get_one_with_hashed_password(email=data.email)
+    except NotFoundException:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Пользователь не найден.')
+
     if not AuthService().verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверный логин или пароль.')
     token = AuthService().create_access_token(data={'user_id': user.id})
@@ -32,8 +39,9 @@ async def login_user(data: UserRequestAddSchema, response: Response, db: DBDep):
 
 @router.get('/me')
 async def get_me(user_id: UserIdDep, db: DBDep):
-    user = await db.users.get_one_or_none(id=user_id)
-    if user is None:
+    try:
+        user = await db.users.get_one(id=user_id)
+    except NotFoundException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Не авторизирован')
     return user
 

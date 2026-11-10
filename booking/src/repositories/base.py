@@ -2,10 +2,12 @@ from typing import Sequence
 
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
+from src.exceptions import NotFoundException, ConflictException
 from src.repositories.mapper.base import DataMapper
 from src.config import settings
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class BaseRepository:
@@ -33,11 +35,24 @@ class BaseRepository:
             return None
         return self.mapper.from_orm(model)
 
+    async def get_one(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
+        self.debug(request=query)
+        result = await self.session.execute(query)
+        try:
+            model = result.scalar_one()
+        except NoResultFound:
+            raise NotFoundException
+        return self.mapper.from_orm(model)
+
     async def add(self, data: BaseModel):
         add_hotel_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         self.debug(request=add_hotel_stmt)
-        hotel = await self.session.execute(add_hotel_stmt)
-        model = hotel.scalars().one()
+        try:
+            hotel = await self.session.execute(add_hotel_stmt)
+            model = hotel.scalars().one()
+        except IntegrityError:
+            raise ConflictException
         return self.mapper.from_orm(model)
 
     async def add_bulk(self, data: Sequence[BaseModel]):
