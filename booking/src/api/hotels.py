@@ -1,10 +1,11 @@
 from datetime import date
 
-from fastapi import Query, APIRouter, Body, status
+from fastapi import Query, APIRouter, Body, status, HTTPException
 
 # import asyncio
 # import time
 from src.api.dependencies import PaginationParamsDep
+from src.exceptions import IncorrectDateRangeException
 from src.schemas.hotels import HotelAddSchema, HotelPatchSchema
 from src.api.dependencies import DBDep
 
@@ -37,14 +38,17 @@ async def get_hotels(
         location: str | None = Query(None, description="Локация отеля"),
 ):
     per_page = pagination.per_page or 10
-    return await db.hotels.get_filtered_by_time(
-        date_from=date_from,
-        date_to=date_to,
-        title=title,
-        location=location,
-        offset=(pagination.page - 1) * per_page,
-        limit=per_page,
-    )
+    try:
+        return await db.hotels.get_filtered_by_time(
+            date_from=date_from,
+            date_to=date_to,
+            title=title,
+            location=location,
+            offset=(pagination.page - 1) * per_page,
+            limit=per_page,
+        )
+    except IncorrectDateRangeException as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error.detail))
 
 
 @router.get('/{hotel_id}', summary='Получить отель')

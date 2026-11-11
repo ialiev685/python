@@ -2,6 +2,7 @@ from datetime import date
 
 from sqlalchemy import select
 
+from src.exceptions import IncorrectDateRangeException
 from src.repositories.mapper.mappers import HotelsDataMapper
 from src.repositories.utils import get_rooms_ids_for_booking
 from src.repositories.base import BaseRepository
@@ -15,6 +16,8 @@ class HotelsRepository(BaseRepository):
 
     async def get_filtered_by_time(self, date_from: date, date_to: date, offset: int, limit: int, title: str | None,
                                    location: str | None):
+        if date_from > date_to:
+            raise IncorrectDateRangeException
         rooms_ids_for_booking = await get_rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotels_ids = select(RoomsModel.hotel_id).filter(RoomsModel.id.in_(rooms_ids_for_booking))
         query = select(HotelsModel).filter(HotelsModel.id.in_(hotels_ids))
