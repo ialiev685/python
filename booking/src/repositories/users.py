@@ -2,7 +2,7 @@ from sqlalchemy import select
 from pydantic import EmailStr
 from sqlalchemy.exc import NoResultFound
 
-from src.exceptions import NotFoundException
+from src.exceptions import ObjectNotFoundException
 from src.repositories.base import BaseRepository
 from src.models.users import UsersModel
 
@@ -20,6 +20,6 @@ class UsersRepository(BaseRepository):
         try:
             model = result.scalar_one()
         except NoResultFound:
-            raise NotFoundException
+            raise ObjectNotFoundException
 
         return UserWithHashedPasswordDataMapper.from_orm(model)

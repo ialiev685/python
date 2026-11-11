@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Response
 
-from src.exceptions import ConflictException, NotFoundException
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyException
 from src.schemas.users import UserRequestAddSchema, UserAddSchema
 from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DBDep
@@ -17,7 +17,7 @@ async def register_user(data: UserRequestAddSchema, db: DBDep):
             data=UserAddSchema(email=data.email, hashed_password=hashed_password)
         )
         await db.commit()
-    except ConflictException:
+    except ObjectAlreadyException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пользователь с таким email уже существует.")
 
     return {"status": status.HTTP_200_OK}
@@ -27,7 +27,7 @@ async def register_user(data: UserRequestAddSchema, db: DBDep):
 async def login_user(data: UserRequestAddSchema, response: Response, db: DBDep):
     try:
         user = await db.users.get_one_with_hashed_password(email=data.email)
-    except NotFoundException:
+    except ObjectNotFoundException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Пользователь не найден.')
 
     if not AuthService().verify_password(data.password, user.hashed_password):
@@ -41,7 +41,7 @@ async def login_user(data: UserRequestAddSchema, response: Response, db: DBDep):
 async def get_me(user_id: UserIdDep, db: DBDep):
     try:
         user = await db.users.get_one(id=user_id)
-    except NotFoundException:
+    except ObjectNotFoundException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Не авторизирован')
     return user
 
