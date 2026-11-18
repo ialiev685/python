@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
-from src.exceptions import ObjectAlreadyException, ObjectNotFoundException
+from src.exceptions import ObjectAlreadyExistsException, ObjectNotFoundException
 from src.repositories.mapper.base import DataMapper
 from src.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,7 +54,7 @@ class BaseRepository:
             model = hotel.scalars().one()
         except IntegrityError as ex:
             if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise ObjectAlreadyException
+                raise ObjectAlreadyExistsException
             else:
                 raise ex
         return self.mapper.from_orm(model)

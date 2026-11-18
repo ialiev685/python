@@ -1,6 +1,13 @@
-from fastapi import APIRouter, status, HTTPException, Response
+from fastapi import APIRouter, status, Response
 
-from src.exceptions import ObjectNotFoundException, ObjectAlreadyException
+from src.exceptions import (
+    UserAlreadyExistsHTTPException,
+    UserAlreadyExistsException,
+    UserNotFoundException,
+    UserNotFoundHTTPException,
+    IncorrectUserOrPasswordException,
+    IncorrectUserOrPasswordHTTPException
+)
 from src.schemas.users import UserRequestAddSchema, UserAddSchema
 from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DBDep
@@ -10,40 +17,32 @@ router = APIRouter(prefix="/auth", tags=["Авторизация и аутент
 
 @router.post("/register")
 async def register_user(data: UserRequestAddSchema, db: DBDep):
-    hashed_password = AuthService().password_hash.hash(data.password)
     try:
-
-        await  db.users.add(
-            data=UserAddSchema(email=data.email, hashed_password=hashed_password)
-        )
-        await db.commit()
-    except ObjectAlreadyException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пользователь с таким email уже существует.")
-
-    return {"status": status.HTTP_200_OK}
+        await AuthService(db=db).register_user(data=data)
+        return {"status": status.HTTP_200_OK}
+    except UserAlreadyExistsException:
+        raise UserAlreadyExistsHTTPException
 
 
 @router.post('/login')
 async def login_user(data: UserRequestAddSchema, response: Response, db: DBDep):
     try:
-        user = await db.users.get_one_with_hashed_password(email=data.email)
-    except ObjectNotFoundException:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Пользователь не найден.')
-
-    if not AuthService().verify_password(data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Неверный логин или пароль.')
-    token = AuthService().create_access_token(data={'user_id': user.id})
-    response.set_cookie(key='access_token', value=token)
-    return {"status": status.HTTP_200_OK, 'access_token': token}
+        token = await AuthService(db=db).login_user(data=data)
+        response.set_cookie(key='access_token', value=token)
+        return {"status": status.HTTP_200_OK, 'access_token': token}
+    except UserNotFoundException:
+        raise UserNotFoundHTTPException
+    except IncorrectUserOrPasswordException:
+        raise IncorrectUserOrPasswordHTTPException
 
 
 @router.get('/me')
 async def get_me(user_id: UserIdDep, db: DBDep):
     try:
-        user = await db.users.get_one(id=user_id)
-    except ObjectNotFoundException:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Не авторизирован')
-    return user
+        user = await AuthService(db=db).get_me(user_id=user_id)
+        return user
+    except UserNotFoundException:
+        raise UserNotFoundHTTPException
 
 
 @router.post('/logout')
